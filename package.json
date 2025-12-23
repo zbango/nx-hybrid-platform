@@ -1,24 +1,27 @@
 {
   "name": "nx-hybrid-platform",
-  "version": "1.0.0",
-  "description": "",
-  "homepage": "https://github.com/zbango/nx-hybrid-platform#readme",
-  "bugs": {
-    "url": "https://github.com/zbango/nx-hybrid-platform/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zbango/nx-hybrid-platform.git"
-  },
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hybrid platform with Electron desktop app, React web app, and AWS Lambda API",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:all": "nx run-many -t build --all",
+    "dev:web": "nx dev web",
+    "dev:desktop": "nx dev desktop",
+    "deploy:api": "nx deploy api",
+    "clean": "nx reset"
   },
   "devDependencies": {
-    "nx": "21.0.4"
+    "@types/node": "^22.10.5",
+    "nx": "^20.3.2",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
   },
-  "nx": {}
+  "engines": {
+    "node": ">=24.12.0",
+    "npm": ">=10.0.0"
+  }
 }

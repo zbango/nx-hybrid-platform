@@ -1,0 +1,27 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@nx-hybrid-platform/data-models": ["packages/data-models/dist/index.d.ts"],
+      "@nx-hybrid-platform/api-client": ["packages/api-client/dist/index.d.ts"],
+      "@nx-hybrid-platform/ui-components": ["packages/ui-components/dist/index.d.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp", "dist", "out"]
+}
