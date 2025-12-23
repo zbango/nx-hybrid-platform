@@ -1,0 +1,32 @@
+service: nx-hybrid-platform-api
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${env:STAGE, 'dev'}
+  memorySize: 256
+  timeout: 10
+
+functions:
+  echo:
+    handler: src/handlers/echo.handler
+    events:
+      - httpApi:
+          path: /api/echo
+          method: POST
+
+plugins:
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude:
+      - aws-sdk
+    target: node22
+    platform: node
+    format: esm
+    mainFields: ["module", "main"]
