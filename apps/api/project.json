@@ -1,0 +1,30 @@
+{
+  "name": "api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api/src",
+  "projectType": "application",
+  "targets": {
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run deploy",
+        "cwd": "apps/api"
+      },
+      "dependsOn": ["^build"]
+    },
+    "remove": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run remove",
+        "cwd": "apps/api"
+      }
+    },
+    "logs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run logs",
+        "cwd": "apps/api"
+      }
+    }
+  }
+}
