@@ -13,7 +13,7 @@ This project implements the simplified architecture from `ARCHITECTURE.md`:
 
 - **3 Applications**:
   - `apps/web` - React web app (Vite + React Query)
-  - `apps/desktop` - Electron desktop app (React + React Query)
+  - `apps/desktop` - Electron desktop app (Webpack + React Query) - Based on [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate)
   - `apps/api` - AWS Lambda function (Serverless Framework v4)
 
 ## Key Features
@@ -21,8 +21,10 @@ This project implements the simplified architecture from `ARCHITECTURE.md`:
 - **Shared Button Component**: Both web and desktop apps use the same UI component
 - **React Query Integration**: Consistent data fetching pattern across applications
 - **Type Safety**: Shared TypeScript interfaces ensure type consistency
+- **Source File Imports**: Apps import workspace packages from source files via TypeScript path mappings
+- **Fast Development**: No need to rebuild packages during development - changes reflect immediately
 - **Monorepo Management**: Nx handles build orchestration and dependency management
-- **Modern Tooling**: Latest versions of React 19, Vite 6, Electron 34, TypeScript 5.7
+- **Modern Tooling**: Latest versions of React 19, Vite 6, Electron 35, Webpack 5, TypeScript 5.8
 
 ## Prerequisites
 
@@ -48,8 +50,11 @@ npm run build:all
 
 This builds all packages in the correct dependency order:
 1. `data-models` (no dependencies)
-2. `api-client` and `ui-components` (depend on data-models)
-3. Applications (depend on all packages)
+2. `api-client` (depends on data-models)
+3. `ui-components` (depends on data-models and api-client)
+4. Applications (depend on all packages)
+
+**Note**: During development, you typically don't need to rebuild packages. Apps use TypeScript path mappings to import directly from package source files.
 
 ### 3. Run Applications
 
@@ -195,7 +200,7 @@ cd apps/desktop
 npm run package
 ```
 
-Output: `apps/desktop/out/`
+Output: `apps/desktop/release/build/`
 
 This creates platform-specific installers using electron-builder:
 - Windows: `.exe` (NSIS installer)
@@ -207,10 +212,10 @@ This creates platform-specific installers using electron-builder:
 ### Core Technologies
 
 - **Monorepo**: Nx 20.x + npm workspaces
-- **Language**: TypeScript 5.7
+- **Language**: TypeScript 5.8
 - **UI Framework**: React 19
-- **Build Tool**: Vite 6 (web), Vite 5 (desktop), electron-vite
-- **Desktop**: Electron 34
+- **Build Tool**: Vite 6 (web), Webpack 5 (desktop)
+- **Desktop**: Electron 35 (based on electron-react-boilerplate template)
 - **Styling**: Tailwind CSS 3.4
 - **Data Fetching**: @tanstack/react-query 5.62
 
@@ -237,58 +242,35 @@ Nx ensures correct build order:
 ```
 data-models (Level 0)
     ↓
-api-client, ui-components (Level 1)
+api-client (Level 1)
     ↓
-web, desktop, api (Level 2)
+ui-components (Level 2)
+    ↓
+web, desktop, api (Level 3)
 ```
 
 Running `npm run build:all` respects these dependencies and caches results.
 
-## Troubleshooting
+### Source File Imports
 
-### Build Errors
+Apps use TypeScript path mappings (defined in `tsconfig.base.json`) to import workspace packages from source files instead of built dist files:
 
-**Q**: TypeScript can't find module declarations
-
-**A**: Ensure packages are built first:
-```bash
-npx nx build data-models
-npx nx build api-client
-npx nx build ui-components
+```typescript
+import { Button } from '@nx-hybrid-platform/ui-components';
+// ↓ Resolves to:
+// packages/ui-components/src/index.ts (source file, not dist/)
 ```
 
-**Q**: Nx cache issues
+**Benefits**:
+- No need to rebuild packages during development
+- Changes reflect immediately in all consuming apps
+- Better debugging with direct source access
+- Faster development workflow
 
-**A**: Reset the cache:
-```bash
-npm run clean
-npm run build:all
-```
-
-### Runtime Errors
-
-**Q**: API calls failing in web/desktop apps
-
-**A**:
-1. Check if API is deployed and URL is correct in `.env` files
-2. Verify CORS is enabled in Lambda response headers
-3. Check browser/Electron DevTools console for errors
-
-**Q**: Desktop app won't launch
-
-**A**:
-1. Rebuild desktop app: `npx nx build desktop`
-2. Try clearing node_modules: `rm -rf apps/desktop/node_modules && npm install`
-3. Check for Electron compatibility issues
-
-### Deployment Issues
-
-**Q**: Serverless deploy fails
-
-**A**:
-1. Verify AWS credentials: `aws sts get-caller-identity`
-2. Check AWS region in `apps/api/.env`
-3. Ensure sufficient AWS permissions (Lambda, API Gateway, CloudFormation)
+**How It Works**:
+- **Web app**: Vite natively supports TypeScript path mappings
+- **Desktop app**: Webpack uses `tsconfig-paths-webpack-plugin`
+- Both resolve to source files for seamless development
 
 ## Next Steps
 

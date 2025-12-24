@@ -56,7 +56,8 @@ apps/api
   └─> @nx-hybrid-platform/data-models
 
 @nx-hybrid-platform/ui-components
-  └─> (no dependencies)
+  ├─> @nx-hybrid-platform/data-models
+  └─> @nx-hybrid-platform/api-client
 
 @nx-hybrid-platform/data-models
   └─> (no dependencies)
@@ -143,13 +144,38 @@ Preload Script (Bridge)
 
 ### Implementation Details
 
-- Electron main process creates window pointing to renderer
-- Renderer is a simple React app with Button component
-- React Query (TanStack Query) used for data fetching and state management
+**Base Template**:
+- Built from [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate)
+- Customized for monorepo structure with workspace package support
+
+**Electron Architecture**:
+- Main process creates window pointing to renderer
+- Renderer is a React app with Button component
+- React Query (TanStack Query) for data fetching and state management
 - React Query wraps api-client calls for caching, refetching, and error handling
 - Button uses React Query mutations/hooks to call API via api-client
 - electron-builder configured for packaging and distribution
-- No database, no sync, no auth
+
+**Webpack Configuration** (`webpack.config.base.ts`):
+- Processes workspace packages from **source files** (not dist)
+- Uses `tsconfig-paths-webpack-plugin` to apply path mappings
+- Handles ES modules from `@nx-hybrid-platform/*` packages
+- ts-loader configured with `tsconfig.json` for app code
+- Build scripts use ts-node with `TS_NODE_PROJECT=tsconfig.node.json`
+
+**Key Webpack Settings**:
+```typescript
+{
+  loader: 'ts-loader',
+  options: {
+    transpileOnly: true,
+    configFile: path.resolve(__dirname, '../../tsconfig.json')
+  }
+}
+```
+
+**Build Scripts**:
+All build scripts specify `TS_NODE_PROJECT=tsconfig.node.json` to ensure ts-node uses the correct TypeScript configuration for webpack configs
 
 **React Query in Electron**: React Query works identically in Electron's renderer process as it does in web browsers. Since the renderer process runs Chromium, all React hooks and libraries function the same way. React Query provides:
 - Automatic caching and background refetching
@@ -229,6 +255,68 @@ export const handler = async (
 - No authorizers, no authentication
 - CORS enabled for all origins
 
+## TypeScript Configuration & Module Resolution
+
+### Monorepo Path Mappings
+
+The monorepo uses TypeScript path mappings defined in `tsconfig.base.json` to enable **source file imports**:
+
+```json
+{
+  "paths": {
+    "@nx-hybrid-platform/data-models": ["packages/data-models/src/index.ts"],
+    "@nx-hybrid-platform/api-client": ["packages/api-client/src/index.ts"],
+    "@nx-hybrid-platform/ui-components": ["packages/ui-components/src/index.ts"]
+  }
+}
+```
+
+**Benefits**:
+- Apps import workspace packages from **source files** (`src/`), not built files (`dist/`)
+- No need to rebuild packages during development
+- Changes reflect immediately across the monorepo
+- Better debugging with direct source access
+- Faster development workflow
+
+### Desktop App TypeScript Configuration
+
+The desktop app uses a **dual TypeScript configuration** to support both application code and build scripts:
+
+**`tsconfig.json`** (Application Source - `src/**/*`):
+- Extends `tsconfig.base.json` → inherits path mappings
+- Module: ESNext with bundler resolution
+- Used by Webpack's ts-loader for app code
+- Default config for IDE (VSCode)
+
+**`tsconfig.node.json`** (Build Scripts - `.erb/**/*`):
+- Module: CommonJS with Node.js resolution
+- Used by ts-node for webpack config files
+- Specified via `TS_NODE_PROJECT=tsconfig.node.json` environment variable
+
+**Why Two Configs?**
+- App code is bundled by Webpack → needs ES module resolution
+- Build scripts run in Node.js → need CommonJS resolution
+- Without separation, ts-node can't load webpack configs properly
+
+### Web App TypeScript Configuration
+
+**`tsconfig.json`**:
+- Extends `tsconfig.base.json` → inherits path mappings
+- Module: ESNext with bundler resolution
+- Used by Vite for app code
+
+**`tsconfig.node.json`**:
+- For Vite config files
+- Node.js resolution
+
+### Package TypeScript Configuration
+
+All packages use consistent configuration:
+- Extend `tsconfig.base.json`
+- Module: ESNext with bundler resolution
+- Generate declaration files and source maps
+- No composite mode (kept simple)
+
 ## Technology Stack
 
 ### Monorepo Tool
@@ -247,10 +335,10 @@ export const handler = async (
 - Prettier (latest)
 
 **Desktop App**:
-- Electron (latest)
+- Electron (latest) - Based on [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate)
 - electron-builder (latest) - For packaging and distribution
 - React (latest)
-- Vite (latest)
+- Webpack 5 (not Vite) - Build tool and bundler
 - @tanstack/react-query (latest) - React Query for data fetching
 - @nx-hybrid-platform/ui-components
 - @nx-hybrid-platform/api-client
@@ -306,18 +394,28 @@ nx-hybrid-platform/
 │       └── package.json
 │
 ├── apps/
-│   ├── desktop/
+│   ├── desktop/                    # Based on electron-react-boilerplate
+│   │   ├── .erb/                   # Electron React Boilerplate configs
+│   │   │   ├── configs/            # Webpack configurations
+│   │   │   │   ├── webpack.config.base.ts
+│   │   │   │   ├── webpack.config.main.*.ts
+│   │   │   │   ├── webpack.config.renderer.*.ts
+│   │   │   │   └── webpack.config.preload.*.ts
+│   │   │   ├── scripts/            # Build and utility scripts
+│   │   │   └── dll/                # Development DLL bundles
 │   │   ├── src/
-│   │   │   ├── main/
-│   │   │   │   └── index.ts
-│   │   │   ├── preload/
-│   │   │   │   └── index.ts
-│   │   │   └── renderer/
-│   │   │       ├── index.html
+│   │   │   ├── main/               # Main process (Node.js)
+│   │   │   ├── preload/            # Preload scripts
+│   │   │   └── renderer/           # Renderer process (React app)
 │   │   │       ├── index.tsx
-│   │   │       └── App.tsx
+│   │   │       ├── App.tsx
+│   │   │       └── App.css
+│   │   ├── release/                # Build output
+│   │   │   ├── app/                # Packaged app
+│   │   │   └── build/              # Distributable files
 │   │   ├── package.json
-│   │   └── electron-builder.yml (electron-builder configuration)
+│   │   ├── tsconfig.json           # App source config (inherits path mappings)
+│   │   └── tsconfig.node.json      # Build scripts config
 │   │
 │   ├── web/
 │   │   ├── src/
@@ -338,18 +436,74 @@ nx-hybrid-platform/
 └── tsconfig.base.json
 ```
 
+## Build Process & Package Consumption
+
+### Development Workflow
+
+**Package Development**:
+1. Packages are built once: `npm run build` in each package
+2. Generated files in `dist/`: compiled JS, type declarations, source maps
+3. Apps can run without rebuilding packages (use source imports)
+
+**App Development** (Desktop & Web):
+1. Apps import workspace packages via path mappings
+2. Imports resolve to **source files** (`packages/*/src/`) during development
+3. Bundlers (Webpack/Vite) compile source files directly
+4. Changes to packages reflect immediately in apps
+5. No need to rebuild packages during development
+
+### Production Build Process
+
+**Full Build** (`npm run build:all`):
+1. **Packages** build first (Nx determines order based on dependencies)
+   - `data-models` → `api-client` → `ui-components`
+2. **Apps** build after packages
+   - Desktop: Webpack bundles from source
+   - Web: Vite bundles from source
+3. Nx caches builds for faster subsequent runs
+
+**Desktop App Build**:
+- `npm run build` → Webpack bundles main + renderer processes
+- Path mappings applied via `tsconfig-paths-webpack-plugin`
+- Source files bundled, not dist files
+- Output: `release/app/dist/`
+
+**Web App Build**:
+- `npm run build` → Vite bundles for production
+- Path mappings applied automatically
+- Source files bundled, not dist files
+- Output: `dist/`
+
+### Why Source Imports Work
+
+**TypeScript Path Mappings** (from `tsconfig.base.json`):
+```json
+"@nx-hybrid-platform/ui-components": ["packages/ui-components/src/index.ts"]
+```
+
+**Bundler Integration**:
+- **Webpack**: Uses `tsconfig-paths-webpack-plugin` to read path mappings
+- **Vite**: Natively supports TypeScript path mappings
+
+**Result**:
+- Both TypeScript (for type checking) and bundlers (for compilation) resolve to source
+- Single source of truth for all imports
+- Consistent behavior across development and production
+
 ## Implementation Steps
 
 1. **Setup Nx monorepo structure** (Nx handles workspace orchestration, npm for package management)
 2. **Create data-models package** with ApiRequest/ApiResponse interfaces
 3. **Create api-client package** with HTTP client class
 4. **Create ui-components package** with Button component
-5. **Create Electron desktop app** with React Query setup
+5. **Create Electron desktop app** with React Query setup (from electron-react-boilerplate)
 6. **Create React Vite web app** with React Query setup
-7. **Configure both apps** to use React Query with api-client
-8. **Create Serverless Framework v4 API** with echo Lambda function
-9. **Configure Button** to use React Query hooks → api-client → API
-10. **Test end-to-end**: Button click → React Query → api-client → API → Console log → Response echo
+7. **Configure TypeScript path mappings** in `tsconfig.base.json`
+8. **Configure both apps** to extend base tsconfig and use React Query with api-client
+9. **Configure Webpack** (desktop) with tsconfig-paths-webpack-plugin
+10. **Create Serverless Framework v4 API** with echo Lambda function
+11. **Configure Button** to use React Query hooks → api-client → API
+12. **Test end-to-end**: Button click → React Query → api-client → API → Console log → Response echo
 
 
 ## Testing Strategy
