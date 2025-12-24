@@ -3,10 +3,20 @@ import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs';
 import { TextEncoder, TextDecoder } from 'node:util';
-import webpackPaths from '../configs/webpack.paths';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-const mainPath = path.join(webpackPaths.distMainPath, 'main.js');
-const rendererPath = path.join(webpackPaths.distRendererPath, 'renderer.js');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Calculate paths manually instead of importing webpack.paths (which is .ts)
+const rootPath = join(__dirname, '../..');
+const distPath = join(rootPath, 'release/app/dist');
+const distMainPath = join(distPath, 'main');
+const distRendererPath = join(distPath, 'renderer');
+
+const mainPath = path.join(distMainPath, 'main.js');
+const rendererPath = path.join(distRendererPath, 'renderer.js');
 
 if (!fs.existsSync(mainPath)) {
   throw new Error(

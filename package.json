@@ -13,6 +13,7 @@
     "dev:desktop": "nx dev desktop",
     "dev:all": "concurrently -n \"web,desktop\" -c \"blue,green\" \"npm run dev:web\" \"npm run dev:desktop\"",
     "deploy:api": "nx deploy api",
+    "package:desktop": "nx package desktop",
     "clean": "nx reset"
   },
   "devDependencies": {
