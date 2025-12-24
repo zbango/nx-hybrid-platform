@@ -2,14 +2,14 @@
   "name": "@nx-hybrid-platform/api-client",
   "version": "0.1.0",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/packages/api-client/src/index.js",
+  "types": "./dist/packages/api-client/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/packages/api-client/src/index.d.ts",
+      "import": "./dist/packages/api-client/src/index.js",
+      "require": "./dist/packages/api-client/src/index.js",
+      "default": "./dist/packages/api-client/src/index.js"
     }
   },
   "scripts": {

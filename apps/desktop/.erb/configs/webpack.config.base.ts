@@ -68,14 +68,26 @@ const configuration: webpack.Configuration = {
   resolve: {
     extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
     modules: [webpackPaths.srcPath, 'node_modules'],
-    // There is no need to add aliases here, the paths in tsconfig get mirrored
-    plugins: [new TsconfigPathsPlugins()],
+    // Explicit aliases for workspace packages to ensure they resolve to source files
+    alias: {
+      '@nx-hybrid-platform/api-client': path.resolve(__dirname, '../../../../packages/api-client/src/index.ts'),
+      '@nx-hybrid-platform/data-models': path.resolve(__dirname, '../../../../packages/data-models/src/index.ts'),
+      '@nx-hybrid-platform/ui-components': path.resolve(__dirname, '../../../../packages/ui-components/src/index.ts'),
+    },
+    plugins: [
+      new TsconfigPathsPlugins({
+        configFile: path.resolve(__dirname, '../../tsconfig.json'),
+        extensions: ['.ts', '.tsx', '.js', '.jsx'],
+      }),
+    ],
     // Support ES modules from workspace packages
-    conditionNames: ['import', 'require', 'default'],
+    conditionNames: ['source', 'import', 'require', 'default'],
     // Allow extensionless imports for workspace packages
     extensionAlias: {
       '.js': ['.js', '.ts', '.tsx'],
     },
+    // Allow extensionless imports globally
+    fullySpecified: false,
   },
 
   plugins: [new webpack.EnvironmentPlugin({ NODE_ENV: 'production' })],

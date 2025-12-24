@@ -14,6 +14,13 @@ checkNodeEnv('development');
 
 const dist = webpackPaths.dllPath;
 
+// Exclude workspace packages from DLL - they'll be resolved via TsconfigPathsPlugin
+const excludeWorkspacePackages = (deps: Record<string, string>) => {
+  return Object.keys(deps).filter(
+    (dep) => !dep.startsWith('@nx-hybrid-platform/')
+  );
+};
+
 const configuration: webpack.Configuration = {
   context: webpackPaths.rootPath,
 
@@ -31,7 +38,7 @@ const configuration: webpack.Configuration = {
   module: require('./webpack.config.renderer.dev').default.module,
 
   entry: {
-    renderer: Object.keys(dependencies || {}),
+    renderer: excludeWorkspacePackages(dependencies || {}),
   },
 
   output: {
