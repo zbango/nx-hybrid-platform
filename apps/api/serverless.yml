@@ -3,10 +3,26 @@ service: nx-hybrid-platform-api
 provider:
   name: aws
   runtime: nodejs22.x
-  region: ${env:AWS_REGION, 'us-east-1'}
+  region: us-east-1
   stage: ${env:STAGE, 'dev'}
   memorySize: 256
   timeout: 10
+  httpApi:
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedHeaders:
+        - Content-Type
+        - X-Amz-Date
+        - Authorization
+        - X-Api-Key
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allowCredentials: false
 
 functions:
   echo:
@@ -15,18 +31,3 @@ functions:
       - httpApi:
           path: /api/echo
           method: POST
-
-plugins:
-  - serverless-esbuild
-
-custom:
-  esbuild:
-    bundle: true
-    minify: false
-    sourcemap: true
-    exclude:
-      - aws-sdk
-    target: node22
-    platform: node
-    format: esm
-    mainFields: ["module", "main"]
