@@ -3,6 +3,7 @@
  */
 
 import webpack from 'webpack';
+import path from 'path';
 import TsconfigPathsPlugins from 'tsconfig-paths-webpack-plugin';
 import webpackPaths from './webpack.paths';
 import { dependencies as externals } from '../../release/app/package.json';
@@ -44,6 +45,7 @@ const configuration: webpack.Configuration = {
           options: {
             // Remove this line to enable type checking in webpack builds
             transpileOnly: true,
+            configFile: path.resolve(__dirname, '../../tsconfig.json'),
             compilerOptions: {
               module: 'esnext',
               moduleResolution: 'bundler',

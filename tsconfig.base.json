@@ -18,9 +18,9 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@nx-hybrid-platform/data-models": ["packages/data-models/dist/index.d.ts"],
-      "@nx-hybrid-platform/api-client": ["packages/api-client/dist/index.d.ts"],
-      "@nx-hybrid-platform/ui-components": ["packages/ui-components/dist/index.d.ts"]
+      "@nx-hybrid-platform/data-models": ["packages/data-models/src/index.ts"],
+      "@nx-hybrid-platform/api-client": ["packages/api-client/src/index.ts"],
+      "@nx-hybrid-platform/ui-components": ["packages/ui-components/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "dist", "out"]

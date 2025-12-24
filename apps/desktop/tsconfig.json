@@ -1,18 +1,20 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "incremental": true,
-    "target": "es2022",
-    "module": "node16",
-    "lib": ["dom", "es2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "lib": ["dom", "es2022"],
+    "target": "ES2022",
     "strict": true,
     "sourceMap": true,
-    "moduleResolution": "node16",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "allowJs": true,
-    "outDir": ".erb/dll"
+    "skipLibCheck": true,
+    "noEmit": true
   },
-  "exclude": ["test", "release/build", "release/app/dist", ".erb/dll"]
+  "include": ["src/**/*"],
+  "exclude": ["test", "release", ".erb", "node_modules"]
 }
+
